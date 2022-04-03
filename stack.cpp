@@ -19,21 +19,38 @@
 #define INIT_SIZE 5
 using namespace std;
 
-class stack {
-    string stack[INIT_SIZE]; 
-    int size = 5;
+class Stack {
+    string *stack = new string[INIT_SIZE]; 
+    
+    int size = INIT_SIZE;
     int pointer = 0;
 
     public:
     // stack() {
 
     // }
+
+    ~Stack() {
+        delete[] stack;
+    }
     bool push(string text) {
         if (pointer==size-1) {
-            return false; 
-            // RESIZE THE STACK
+            string *temp = new string[size];
+            for (size_t i = 0; i < pointer; i++)
+            {
+                temp[i] = stack[i];
+            }  
+            delete[] stack;     
+            stack = new string[size*2];
+            size = size*2;
+            for (size_t i = 0; i < pointer; i++)
+            {
+                stack[i] = temp[i];
+            }
+            delete[] temp;
         }
         stack[pointer++] = text;
+        
         return true;
     }
 
@@ -58,7 +75,7 @@ class stack {
 
 int main () {
     bool running = true;
-    stack stack;
+    Stack stack;
     while (running) {
         string command; 
         cin >> command;
@@ -80,7 +97,6 @@ int main () {
             running = false;
         }
         
-
     }
 
     return 1;
