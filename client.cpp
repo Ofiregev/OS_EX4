@@ -15,8 +15,11 @@
 #include <arpa/inet.h>
 
 #include <iostream>
+#include <string>
+using namespace std;
 
-#define PORT "3491" // the port client will be connecting to 
+
+#define PORT "3400" // the port client will be connecting to 
 
 #define MAXDATASIZE 1024 // max number of bytes we can get at once 
 
@@ -84,6 +87,48 @@ int main(int argc, char *argv[])
     We send the input to the server (we can filter it here in the client, but not must)
     The sever will send us data only when we send "TOP". 
     */
+   bool connected = true;
+   while (connected) {
+       cout << "test";
+        string command; 
+        cin >> command;
+        if (command == "PUSH") {
+            string line;
+            getline(cin, line);
+            /*
+                HERE WE NEED TO SEND TO THE SERVER PUSH AND THEN THE LINE WE WANT TO PUSH. 
+                THEN WE NEED TO RECEIVE SOME VERIFICATION (TRUE OR FALSE)
+            */
+
+           // OLD CODE:
+            // if (!stack.push(line)) {
+            //     cout << "PUSH failed\n";
+            // };
+        } else if (command == "POP") {
+            /*
+                HERE WE NEED TO SEND TO THE SERVER POP. 
+                THEN WE NEED TO RECEIVE SOME VERIFICATION (TRUE OR FALSE) OR MAYBE RECEIVE THE POPPED ITEM ITSELF (REQUIRES CHANGES IN STACK CLASS)
+            */
+            
+            // OLD CODE:
+            // if (!stack.pop()) {
+            //     cout << "POP failed\n";
+            // } else {
+            //     cout << "POPPED\n";
+            // }
+        } else if (command == "TOP") {
+            /*
+                HERE WE NEED TO SEND TO THE SERVER TOP. 
+                THEN WE NEED TO RECEIVE THE OUTPUT FROM THE SERVER.
+            */
+            // OLD CODE:
+            // cout << "OUTPUT: " << stack.top() << endl;
+        } else if (command == "EXIT") {
+            connected = false;
+        }
+   }
+
+   // OLD CODE: (HAS TO BE DELETED)
     if ((numbytes = recv(sockfd, buf, MAXDATASIZE-1, 0)) == -1) {
         perror("recv");
         exit(1);

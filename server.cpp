@@ -15,7 +15,7 @@
 #include <signal.h>
 #include <pthread.h> // threads
 
-#define PORT "3491"  // the port users will be connecting to
+#define PORT "3400"  // the port users will be connecting to
 
 #define BACKLOG 10   // how many pending connections queue will hold
 
@@ -49,6 +49,7 @@ void *threadfunc(void *newfd) {
             perror("send");
     }
     close(new_fd);
+    return newfd;
 }
 int main(void)
 {
