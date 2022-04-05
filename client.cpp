@@ -81,17 +81,20 @@ int main(int argc, char *argv[])
     printf("client: connecting to %s\n", s);
 
     freeaddrinfo(servinfo); // all done with this structure
-    
+
     /*
-    Here we need to add a while true loop that listens to the client's input.
-    We send the input to the server (we can filter it here in the client, but not must)
-    The sever will send us data only when we send "TOP". 
+        The following while true loop listens to the client's input.
+        For each correct input it communicates with the server over TCP.
     */
    bool connected = true;
    while (connected) {
         string command; 
         cin >> command;
         if (command == "PUSH") {
+            /*
+                Here we send to the server PUSH to command it to get ready to our text
+                that we want to push. Then, when the server is ready, we send it the text itself.
+            */
             if (send(sockfd, "PUSH", 1024, 0) == -1)  {
                 perror("send");
             }
@@ -105,8 +108,7 @@ int main(int argc, char *argv[])
             }
         } else if (command == "POP") {
             /*
-                HERE WE NEED TO SEND TO THE SERVER POP. 
-                THEN WE NEED TO RECEIVE SOME VERIFICATION (TRUE OR FALSE) OR MAYBE RECEIVE THE POPPED ITEM ITSELF (REQUIRES CHANGES IN STACK CLASS)
+                Here we send to the server 'POP' to command it to pop the stack. 
             */
             if (send(sockfd, "POP", 1024, 0) == -1)  {
                 perror("send");
@@ -116,18 +118,12 @@ int main(int argc, char *argv[])
                 perror("recv");
                 exit(1);
             }
-            printf("OUTPUT: %s\n", buf);
-            
-            // OLD CODE:
-            // if (!stack.pop()) {
-            //     cout << "POP failed\n";
-            // } else {
-            //     cout << "POPPED\n";
-            // }
+            printf("%s\n", buf);
         } else if (command == "TOP") {
             /*
-                HERE WE NEED TO SEND TO THE SERVER TOP. 
-                THEN WE NEED TO RECEIVE THE OUTPUT FROM THE SERVER.
+                Here we send to the sever 'TOP', to command it to send us back the top value.
+                Then we receive from the server a message with the top value, or a message 
+                saying that the stack is empty. 
             */
             if (send(sockfd, "TOP", 1024, 0) == -1)  {
                 perror("send");
@@ -138,15 +134,10 @@ int main(int argc, char *argv[])
                 exit(1);
             }
             printf("OUTPUT: %s\n", buf);
-            // OLD CODE:
-            // cout << "OUTPUT: " << stack.top() << endl;
         } else if (command == "EXIT") {
             connected = false;
         }
    }
-
-   // OLD CODE: (HAS TO BE DELETED)
-    
     close(sockfd);
 
     return 0;

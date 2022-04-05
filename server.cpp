@@ -20,7 +20,7 @@
 #include <iostream>
 
 
-#define PORT "3406"  // the port users will be connecting to
+#define PORT "3411"  // the port users will be connecting to
 
 #define BACKLOG 10   // how many pending connections queue will hold
 
@@ -42,13 +42,12 @@ void *get_in_addr(struct sockaddr *sa)
 void *threadfunc(void *newfd) {
     /*
     This is the function that manages every client. 
-    We need to add here:
-        - A while true loop that recives from the client data (with recv() function). 
+    These are its functions::
+        - A while true loop that receives from the client data (with recv() function). 
         - Once we receive data from the client we need to break it into a string and manage it:
             - TOP will run the stack's top function and send data to the client (with send() function)
             - PUSH will run the stack's push function.
             - POP will run the stack's pop function. 
-            - EXIT will break the while true loop and exit the function (closing the thread).
     */
     bool connected = true;
     int new_fd = *(int*)newfd; 
@@ -58,14 +57,14 @@ void *threadfunc(void *newfd) {
         numbytes = recv(new_fd, buf, sizeof(buf), 0);
         if (numbytes <=0) {
             perror("recv");
-            exit(1);
+            break;
         }
         *(buf+numbytes) = '\0';
         if (!strcmp(buf, "PUSH")) {
             numbytes = recv(new_fd, buf, sizeof(buf), 0);
             if (numbytes <=0) {
                 perror("recv");
-                exit(1);
+                break;
             }
             printf("Pushing %s\n", buf);
             std::string data = buf;
@@ -93,6 +92,15 @@ void *threadfunc(void *newfd) {
     }
     close(new_fd);
     return newfd;
+}
+
+void sig_handler(int signum)
+{
+    if (signum == SIGINT || signum == SIGSTOP) {
+        printf("program terminated gracefully");
+        exit(1);
+    }
+
 }
 int main(void)
 {
@@ -151,7 +159,8 @@ int main(void)
 
     printf("server: waiting for connections...\n");
     int j = 0;
-    
+    signal (SIGINT,sig_handler);
+    signal (SIGSTOP,sig_handler);
     while(1) {  // main accept() loop
         sin_size = sizeof their_addr;
         int new_fd = accept(sockfd, (struct sockaddr *)&their_addr, &sin_size);
