@@ -13,27 +13,22 @@
 // top returns the top value in the stack
 
 
-#include <string>
+#include "stack.hpp"
 #include <iostream>
 #include <cstdlib>
 #define INIT_SIZE 5
 using namespace std;
 
-class Stack {
-    string *stack = new string[INIT_SIZE]; 
-    
-    int size = INIT_SIZE;
-    int pointer = 0;
 
-    public:
-    // stack() {
+  
+    // Stack::stack() {
 
     // }
 
-    ~Stack() {
+    Stack::~Stack() {
         delete[] stack;
     }
-    bool push(string text) {
+    bool Stack::push(string text) {
         if (pointer==size-1) {
             string *temp = new string[size];
             for (size_t i = 0; i < pointer; i++)
@@ -54,51 +49,48 @@ class Stack {
         return true;
     }
 
-    string top() {
+    string Stack::top() {
         if (pointer == 0) {
             return "STACK EMPTY!";
         }
         return stack[pointer-1];
     }
 
-    bool pop() {
+    bool Stack::pop() {
         if (pointer == 0) {
             return false; 
         }
         pointer--;
         return true;
     }
-};
 
 
-
-
-int main () {
-    bool running = true;
-    Stack stack;
-    while (running) {
-        string command; 
-        cin >> command;
-        if (command == "PUSH") {
-            string line;
-            getline(cin, line);
-            if (!stack.push(line)) {
-                cout << "PUSH failed\n";
-            };
-        } else if (command == "POP") {
-            if (!stack.pop()) {
-                cout << "POP failed\n";
-            } else {
-                cout << "POPPED\n";
-            }
-        } else if (command == "TOP") {
-            cout << "OUTPUT: " << stack.top() << endl;
-        } else if (command == "EXIT") {
-            running = false;
-        }
+// int main () {
+//     bool running = true;
+//     Stack stack;
+//     while (running) {
+//         string command; 
+//         cin >> command;
+//         if (command == "PUSH") {
+//             string line;
+//             getline(cin, line);
+//             if (!stack.push(line)) {
+//                 cout << "PUSH failed\n";
+//             };
+//         } else if (command == "POP") {
+//             if (!stack.pop()) {
+//                 cout << "POP failed\n";
+//             } else {
+//                 cout << "POPPED\n";
+//             }
+//         } else if (command == "TOP") {
+//             cout << "OUTPUT: " << stack.top() << endl;
+//         } else if (command == "EXIT") {
+//             running = false;
+//         }
         
-    }
+//     }
 
-    return 1;
+//     return 1;
 
-}
+// }

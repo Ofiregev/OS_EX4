@@ -19,7 +19,7 @@
 using namespace std;
 
 
-#define PORT "3400" // the port client will be connecting to 
+#define PORT "3406" // the port client will be connecting to 
 
 #define MAXDATASIZE 1024 // max number of bytes we can get at once 
 
@@ -89,26 +89,34 @@ int main(int argc, char *argv[])
     */
    bool connected = true;
    while (connected) {
-       cout << "test";
         string command; 
         cin >> command;
         if (command == "PUSH") {
+            if (send(sockfd, "PUSH", 1024, 0) == -1)  {
+                perror("send");
+            }
             string line;
             getline(cin, line);
-            /*
-                HERE WE NEED TO SEND TO THE SERVER PUSH AND THEN THE LINE WE WANT TO PUSH. 
-                THEN WE NEED TO RECEIVE SOME VERIFICATION (TRUE OR FALSE)
-            */
-
-           // OLD CODE:
-            // if (!stack.push(line)) {
-            //     cout << "PUSH failed\n";
-            // };
+            char* c = const_cast<char*>(line.c_str());
+            cout << c << endl;
+            
+            if (send(sockfd, c, 1024, 0) == -1)  {
+                perror("send");
+            }
         } else if (command == "POP") {
             /*
                 HERE WE NEED TO SEND TO THE SERVER POP. 
                 THEN WE NEED TO RECEIVE SOME VERIFICATION (TRUE OR FALSE) OR MAYBE RECEIVE THE POPPED ITEM ITSELF (REQUIRES CHANGES IN STACK CLASS)
             */
+            if (send(sockfd, "POP", 1024, 0) == -1)  {
+                perror("send");
+            }
+            numbytes = recv(sockfd, buf, sizeof(buf), 0);
+            if (numbytes <=0) {
+                perror("recv");
+                exit(1);
+            }
+            printf("OUTPUT: %s\n", buf);
             
             // OLD CODE:
             // if (!stack.pop()) {
@@ -121,6 +129,15 @@ int main(int argc, char *argv[])
                 HERE WE NEED TO SEND TO THE SERVER TOP. 
                 THEN WE NEED TO RECEIVE THE OUTPUT FROM THE SERVER.
             */
+            if (send(sockfd, "TOP", 1024, 0) == -1)  {
+                perror("send");
+            }
+            numbytes = recv(sockfd, buf, sizeof(buf), 0);
+            if (numbytes <=0) {
+                perror("recv");
+                exit(1);
+            }
+            printf("OUTPUT: %s\n", buf);
             // OLD CODE:
             // cout << "OUTPUT: " << stack.top() << endl;
         } else if (command == "EXIT") {
@@ -129,13 +146,6 @@ int main(int argc, char *argv[])
    }
 
    // OLD CODE: (HAS TO BE DELETED)
-    if ((numbytes = recv(sockfd, buf, MAXDATASIZE-1, 0)) == -1) {
-        perror("recv");
-        exit(1);
-    }
-    buf[numbytes] = '\0';
-
-    printf("client: received '%s'\n",buf);
     
     close(sockfd);
 

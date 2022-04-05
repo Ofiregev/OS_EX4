@@ -13,12 +13,18 @@
 #include <arpa/inet.h>
 #include <sys/wait.h>
 #include <signal.h>
-#include <pthread.h> // threads
 
-#define PORT "3400"  // the port users will be connecting to
+#include <pthread.h> // threads
+#include "stack.hpp"
+#include <vector>
+#include <iostream>
+
+
+#define PORT "3406"  // the port users will be connecting to
 
 #define BACKLOG 10   // how many pending connections queue will hold
 
+Stack stack;
 /*
 HERE We need to add the stack's implementation and function
 */
@@ -44,7 +50,44 @@ void *threadfunc(void *newfd) {
             - POP will run the stack's pop function. 
             - EXIT will break the while true loop and exit the function (closing the thread).
     */
-    int new_fd = *(int*)newfd;  
+    bool connected = true;
+    int new_fd = *(int*)newfd; 
+    int numbytes;  
+    char buf[1024];
+    while (connected) {
+        numbytes = recv(new_fd, buf, sizeof(buf), 0);
+        if (numbytes <=0) {
+            perror("recv");
+            exit(1);
+        }
+        *(buf+numbytes) = '\0';
+        if (!strcmp(buf, "PUSH")) {
+            numbytes = recv(new_fd, buf, sizeof(buf), 0);
+            if (numbytes <=0) {
+                perror("recv");
+                exit(1);
+            }
+            printf("Pushing %s\n", buf);
+            std::string data = buf;
+            stack.push(buf);
+        } else if (!strcmp(buf, "TOP")) {
+            if (send(new_fd, stack.top().c_str(), 1024, 0) == -1)  {
+                perror("send");
+            }
+        } else if (!strcmp(buf, "POP")) {
+            if (stack.pop()) {
+                if (send(new_fd, "popped succeeded", 1024, 0) == -1)  {
+                    perror("send");
+                }
+            } else {
+                if (send(new_fd, "popped failed", 1024, 0) == -1)  {
+                    perror("send");
+                }
+            }
+        }
+        
+   }
+     
     if (send(new_fd, "Hello, world!", 13, 0) == -1)  {
             perror("send");
     }
@@ -108,6 +151,7 @@ int main(void)
 
     printf("server: waiting for connections...\n");
     int j = 0;
+    
     while(1) {  // main accept() loop
         sin_size = sizeof their_addr;
         int new_fd = accept(sockfd, (struct sockaddr *)&their_addr, &sin_size);
