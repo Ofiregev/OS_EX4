@@ -20,11 +20,13 @@
 #include <iostream>
 
 
-#define PORT "3411"  // the port users will be connecting to
+#define PORT "3418"  // the port users will be connecting to
 
 #define BACKLOG 10   // how many pending connections queue will hold
 
 Stack stack;
+pthread_mutex_t  mutex;
+
 /*
 HERE We need to add the stack's implementation and function
 */
@@ -53,27 +55,36 @@ void *threadfunc(void *newfd) {
     int new_fd = *(int*)newfd; 
     int numbytes;  
     char buf[1024];
+
     while (connected) {
+      
         numbytes = recv(new_fd, buf, sizeof(buf), 0);
         if (numbytes <=0) {
             perror("recv");
             break;
         }
         *(buf+numbytes) = '\0';
+         
         if (!strcmp(buf, "PUSH")) {
+            pthread_mutex_lock(&mutex);
             numbytes = recv(new_fd, buf, sizeof(buf), 0);
             if (numbytes <=0) {
                 perror("recv");
                 break;
             }
+           
             printf("Pushing %s\n", buf);
             std::string data = buf;
             stack.push(buf);
+              pthread_mutex_unlock(&mutex);
         } else if (!strcmp(buf, "TOP")) {
             if (send(new_fd, stack.top().c_str(), 1024, 0) == -1)  {
                 perror("send");
             }
+           
+
         } else if (!strcmp(buf, "POP")) {
+            pthread_mutex_lock(&mutex);
             if (stack.pop()) {
                 if (send(new_fd, "popped succeeded", 1024, 0) == -1)  {
                     perror("send");
@@ -83,10 +94,11 @@ void *threadfunc(void *newfd) {
                     perror("send");
                 }
             }
+            pthread_mutex_unlock(&mutex);
         }
         
    }
-     
+    //  pthread_mutex_unlock(&mutex);
     if (send(new_fd, "Hello, world!", 13, 0) == -1)  {
             perror("send");
     }
@@ -112,6 +124,7 @@ int main(void)
     int yes=1;
     char s[INET6_ADDRSTRLEN];
     int rv;
+    pthread_mutex_init(&mutex,NULL);
 
     memset(&hints, 0, sizeof hints);
     hints.ai_family = AF_UNSPEC;
@@ -178,6 +191,7 @@ int main(void)
         j++;
 
     }
+    pthread_mutex_destroy(&mutex);
 
     return 0;
 }
