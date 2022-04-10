@@ -1,6 +1,8 @@
 #include <stdio.h>
 #define HEAP_TOTAL_SIZE 2048
 
+
+
 typedef struct Memory_Node
 {
     __uint32_t size;
@@ -8,7 +10,8 @@ typedef struct Memory_Node
     struct Memort_Node* nextNode;
     struct Memory_Node* prevNode;
 }mem,*pmem;
-
+#define NULL_PTR ((void*)0)
+#define HEAP_NODE_SIZE sizeof(mem)
 static unsigned char MyHeapArea[HEAP_TOTAL_SIZE];
 static pmem heapStart = (pmem) MyHeapArea; 
 
@@ -68,20 +71,17 @@ void * my_malloc(size_t size)
   }
   return (void*) NULL;
 }
-void memory_free(void* p)
+void mem1_free(void* p)
 {
-  if (p == NULL)
+  if (p == NULL_PTR)
   {
     return;
   }
 
   /* get actual heap node */
-  pmem currentBlock = (pmem)((unsigned char*)p - sizeof(mem));
-  printf("p is %p\n",p);
-    printf("curblock is: %p\n",currentBlock);
+  pmem currentBlock = (pmem)((unsigned char*)p - HEAP_NODE_SIZE);
 
-
-  if (currentBlock == NULL)
+  if (currentBlock == NULL_PTR)
   {
     return;
   }
@@ -90,49 +90,110 @@ void memory_free(void* p)
 
   /* check if we can merge with next block */
   pmem temp = currentBlock->nextNode;
-  printf("temp is: %p\n",temp);
-  if (temp != NULL)
+  if (temp != NULL_PTR)
   {
     if (!temp->used)
     {
       /* add size of next block and its control data to current block */
       currentBlock->size += temp->size;
-      currentBlock->size += sizeof(mem);
+      currentBlock->size += HEAP_NODE_SIZE;
 
       /* remove next block */
       /* link current block to next-next block */
       currentBlock->nextNode = temp->nextNode;
       /* link next-next block to current block if next-next block exists */
-      if (currentBlock->nextNode != NULL) /* currentBlock->nextNode points to next-next block already! */
+      if (currentBlock->nextNode != NULL_PTR) /* currentBlock->nextNode points to next-next block already! */
       {
         temp->prevNode = currentBlock;
       }
     }
   }
-printf("cur prev: %p",currentBlock->prevNode);
+
   /* check if we can merge with previous block */
-  if (currentBlock->prevNode != NULL)
+  if (currentBlock->prevNode != NULL_PTR)
   {
     if (!currentBlock->prevNode->used)
     {
-        printf("used, %d\n",currentBlock->prevNode->used);
       /* add size of freed memory region and its control data to previous block */
       currentBlock->prevNode->size += currentBlock->size;
-      currentBlock->prevNode->size += sizeof(mem);
+      currentBlock->prevNode->size += HEAP_NODE_SIZE;
 
       /* remove freed block from list */
       /* link previous block to next block */
       currentBlock->prevNode->nextNode = currentBlock->nextNode;
       /* link next block to previous block if next block exists */
-      if (currentBlock->nextNode != NULL)
+      if (currentBlock->nextNode != NULL_PTR)
       {
         temp->prevNode = currentBlock->prevNode;
       }
-      p = temp;
     }
   }
-  return;
 } 
+// void memory_free(void* p)
+// {
+//   if (p == NULL)
+//   {
+//     return;
+//   }
+
+//   /* get actual heap node */
+//   pmem currentBlock = (pmem)((unsigned char*)p - sizeof(mem));
+//   printf("p is %p\n",p);
+//     printf("curblock is: %p\n",currentBlock);
+
+
+//   if (currentBlock == NULL)
+//   {
+//     return;
+//   }
+
+//   currentBlock->used = 0;
+
+//   /* check if we can merge with next block */
+//   pmem temp = currentBlock->nextNode;
+//   printf("temp is: %p\n",temp);
+//   if (temp != NULL)
+//   {
+//     if (!temp->used)
+//     {
+//       /* add size of next block and its control data to current block */
+//       currentBlock->size += temp->size;
+//       currentBlock->size += sizeof(mem);
+
+//       /* remove next block */
+//       /* link current block to next-next block */
+//       currentBlock->nextNode = temp->nextNode;
+//       /* link next-next block to current block if next-next block exists */
+//       if (currentBlock->nextNode != NULL) /* currentBlock->nextNode points to next-next block already! */
+//       {
+//         temp->prevNode = currentBlock;
+//       }
+//     }
+//   }
+// printf("cur prev: %p",currentBlock->prevNode);
+//   /* check if we can merge with previous block */
+//   if (currentBlock->prevNode != NULL)
+//   {
+//     if (!(currentBlock->prevNode)->used)
+//     {
+//         printf("used, %d\n",currentBlock->prevNode->used);
+//       /* add size of freed memory region and its control data to previous block */
+//       currentBlock->prevNode->size += currentBlock->size;
+//       currentBlock->prevNode->size += sizeof(mem);
+
+//       /* remove freed block from list */
+//       /* link previous block to next block */
+//       currentBlock->prevNode->nextNode = currentBlock->nextNode;
+//       /* link next block to previous block if next block exists */
+//       if (currentBlock->nextNode != NULL)
+//       {
+//         temp->prevNode = currentBlock->prevNode;
+//     }
+//     }
+//       p = currentBlock - sizeof(p);
+//   }
+//   return;
+// } 
 
 int main(int argc, char const *argv[])
 {
@@ -142,7 +203,6 @@ int main(int argc, char const *argv[])
     printf("%p\n",m);
     m = (char*) my_malloc(10);
     t = (char *) my_malloc(200);
-    m ="acv";
 
     if(!m){
         printf("error");
@@ -157,8 +217,8 @@ int main(int argc, char const *argv[])
         printf("yofi!\n");
       
     }
-    printf("%p\n",m);
-    memory_free(m);
-    printf("%p\n",m);
+    printf("%p\n",t);
+    mem1_free(t);
+    printf("%p\n",t);
     return 0;
 }

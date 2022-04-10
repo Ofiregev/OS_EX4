@@ -16,10 +16,16 @@
 #include "stack.hpp"
 #include <iostream>
 #include <cstdlib>
+#include "memory_alloc.c"
 #define INIT_SIZE 5
 using namespace std;
 
 
+void* operator new (size_t s){
+    char * p = (char *) my_malloc(s);
+    return p;
+
+}
   
     // Stack::stack() {
 
@@ -30,7 +36,7 @@ using namespace std;
     }
     bool Stack::push(string text) {
         if (pointer==size-1) {
-            string *temp = new string[size];
+            string *temp = new string[size]; 
             for (size_t i = 0; i < pointer; i++)
             {
                 temp[i] = stack[i];
