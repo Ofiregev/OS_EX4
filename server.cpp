@@ -15,17 +15,21 @@
 #include <signal.h>
 
 #include <pthread.h> // threads
+#include <tbb/mutex.h>
+
 #include "stack.hpp"
 #include <vector>
 #include <iostream>
 
 
-#define PORT "3418"  // the port users will be connecting to
+#define PORT "3400"  // the port users will be connecting to
 
 #define BACKLOG 10   // how many pending connections queue will hold
+#include <tbb/mutex.h>
 
+int count;
 Stack stack;
-pthread_mutex_t  mutex;
+tbb::mutex mutex;
 
 /*
 HERE We need to add the stack's implementation and function
@@ -66,7 +70,8 @@ void *threadfunc(void *newfd) {
         *(buf+numbytes) = '\0';
          
         if (!strcmp(buf, "PUSH")) {
-            pthread_mutex_lock(&mutex);
+            tbb::mutex::scoped_lock lock(mutex);
+            //pthread_mutex_lock(&mutex);
             numbytes = recv(new_fd, buf, sizeof(buf), 0);
             if (numbytes <=0) {
                 perror("recv");
@@ -76,7 +81,7 @@ void *threadfunc(void *newfd) {
             printf("Pushing %s\n", buf);
             std::string data = buf;
             stack.push(buf);
-              pthread_mutex_unlock(&mutex);
+            //pthread_mutex_unlock(&mutex);
         } else if (!strcmp(buf, "TOP")) {
             if (send(new_fd, stack.top().c_str(), 1024, 0) == -1)  {
                 perror("send");
@@ -84,7 +89,8 @@ void *threadfunc(void *newfd) {
            
 
         } else if (!strcmp(buf, "POP")) {
-            pthread_mutex_lock(&mutex);
+            tbb::mutex::scoped_lock lock(mutex);
+            //pthread_mutex_lock(&mutex);
             if (stack.pop()) {
                 if (send(new_fd, "popped succeeded", 1024, 0) == -1)  {
                     perror("send");
@@ -94,7 +100,7 @@ void *threadfunc(void *newfd) {
                     perror("send");
                 }
             }
-            pthread_mutex_unlock(&mutex);
+            //pthread_mutex_unlock(&mutex);
         }
         
    }
@@ -124,7 +130,6 @@ int main(void)
     int yes=1;
     char s[INET6_ADDRSTRLEN];
     int rv;
-    pthread_mutex_init(&mutex,NULL);
 
     memset(&hints, 0, sizeof hints);
     hints.ai_family = AF_UNSPEC;
@@ -186,12 +191,10 @@ int main(void)
         get_in_addr((struct sockaddr *)&their_addr), s, sizeof s);
         printf("server: got connection from %s\n", s);
         
-        pthread_t *thread_id = (pthread_t*)malloc(sizeof(pthread_t)*10); // up to 10 clients
-        pthread_create(&thread_id[j%10], NULL, threadfunc, &new_fd);
-        j++;
+        pthread_t *thread_id = (pthread_t*)malloc(sizeof(pthread_t)*BACKLOG); // up to 10 clients
+        pthread_create(&thread_id[j++%BACKLOG], NULL, threadfunc, &new_fd);
 
     }
-    pthread_mutex_destroy(&mutex);
 
     return 0;
 }
